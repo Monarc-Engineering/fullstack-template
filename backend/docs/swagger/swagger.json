@@ -435,6 +435,52 @@
                 }
             }
         },
+        "/dev/emails": {
+            "get": {
+                "description": "Each email rendered with sample data, as Mailjet would get it. Local development only.",
+                "produces": [
+                    "text/html"
+                ],
+                "tags": [
+                    "observability"
+                ],
+                "summary": "Email template preview",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Sample to show",
+                        "name": "email",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "text for the plain-text part",
+                        "name": "view",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "phone for a 375px-wide frame",
+                        "name": "width",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Preview page",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Unknown sample",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/health": {
             "get": {
                 "produces": [

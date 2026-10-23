@@ -1,6 +1,6 @@
 ---
 topic: routing
-last_verified: 2026-06-25
+last_verified: 2026-10-23
 sources:
   - internal/transport/handlers/handler.go
   - internal/transport/handlers/routes.go
@@ -149,6 +149,12 @@ func (h *Handler) RegisterRoutes(rps float64, burst int, sentryDSN string, allow
         r.Any("/admin/queues/*path", gin.WrapH(h.queueUI))
     }
 
+    // Email template preview — debug/local only (docs/email.md).
+    if gin.Mode() == gin.DebugMode && h.emailPreview != nil {
+        r.GET("/dev/emails", gin.WrapH(h.emailPreview))
+        r.GET("/dev/emails/*path", gin.WrapH(h.emailPreview))
+    }
+
     api := r.Group("/api/v1")
     if h.verifier != nil {
         api.Use(middleware.FirebaseAuth(h.verifier))
@@ -213,6 +219,7 @@ Allowed methods: GET, POST, PUT, DELETE, OPTIONS, PATCH.
 | GET | `/debug/pprof/trace` | `LocalNetworkOnly()` (always) | execution trace | `routes.go` |
 | GET | `/debug/pprof/:profile` | `LocalNetworkOnly()` (always) | named profile (heap, goroutine, etc.) | `routes.go` |
 | GET | `/admin/queues` | none (debug mode only) | Asynqmon job-monitoring UI | `routes.go` |
+| GET | `/dev/emails`, `/dev/emails/*path` | none (debug mode only, `WithEmailPreview`) | Email template preview (`docs/email.md`) | `routes.go` |
 | GET | `/api/v1/me` | FirebaseAuth header | `MeHandler` — returns verified `FirebaseToken` claims | `auth_handler.go` |
 | PATCH | `/api/v1/me` | FirebaseAuth header | `UpdateMeHandler` — upserts user profile; returns `domain.User` | `me_handler.go` |
 | DELETE | `/api/v1/me` | FirebaseAuth header | `DeleteMeHandler` — deletes user profile record; 204 on success | `me_handler.go` |

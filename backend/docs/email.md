@@ -1,15 +1,19 @@
 ---
 topic: email
-last_verified: 2026-06-23
+last_verified: 2026-10-23
 sources:
   - internal/usecase/email.go
   - internal/infrastructure/email/mailjet.go
+  - internal/infrastructure/email/welcome.go
+  - internal/infrastructure/email/preview.go
   - internal/infrastructure/email/templates/welcome.html
+  - internal/infrastructure/email/templates/welcome.txt
   - internal/infrastructure/queue/handlers.go
   - internal/infrastructure/queue/tasks.go
   - internal/bootstrap/bootstrap.go
   - internal/server/server.go
   - internal/transport/handlers/handler.go
+  - internal/transport/handlers/routes.go
 ---
 
 # Email (Mailjet)
@@ -45,16 +49,26 @@ func NewSandboxSender(apiKey, secretKey, fromEmail, fromName string) *MailjetSen
 
 The optional `baseURL` variadic on `NewMailjetSender` overrides the Mailjet API endpoint, which allows unit tests to point the sender at an `httptest.Server`.
 
-### HTML templates
+### Templates
 
-Templates are embedded at compile time via `//go:embed`:
+Each email has two templates in `internal/infrastructure/email/templates/`, embedded at compile time (`//go:embed templates/*` in `welcome.go`) and parsed once at startup:
 
-```go
-//go:embed templates/welcome.html
-var templateFS embed.FS
-```
+- `welcome.html` — Go `html/template`, so values people typed (names) are escaped. Table layout with inline styles, as email clients need.
+- `welcome.txt` — Go `text/template`, the plain-text part (sent alongside the HTML; some clients and people read only that).
 
-`templates/welcome.html` is a Go `html/template` file. The only template data value currently used is `{{.Name}}` (the recipient's display name). `renderWelcomeTemplate` parses and executes the template on each call and returns the rendered HTML string.
+`renderWelcome(name)` (`welcome.go`) fills `welcomeData` (`Name`, "there" when empty) and returns a `message{Subject, HTML, Text}`. The sender sends that message, and the preview below shows it, so what you preview is exactly what is sent.
+
+### Previewing the templates
+
+With the backend running locally (`make watch`), open **http://localhost:8080/dev/emails**. It shows every email rendered with sample data:
+
+- A sidebar of samples (`previewSamples` in `preview.go`), one per way a template can come out (e.g. with and without a name). Add a sample when a template gains a branch.
+- **HTML / Text** switches between the two parts; **Desktop / Phone** frames the HTML at full width or 375px.
+- `/dev/emails/<sample>.html` and `.txt` serve each part on its own.
+
+Save a template and Air rebuilds the backend (it watches `.html` and `.txt`); the open page polls `/dev/emails/build`, which changes on every restart, and reloads itself. No separate server to run, and no Mailjet keys needed.
+
+It is only registered in debug mode (`ENV` other than `staging`/`production`), like `/admin/queues`: `server.NewServer` passes `email.NewPreview("/dev/emails")` to `Handler.WithEmailPreview`.
 
 ### How welcome email is triggered
 
@@ -107,13 +121,15 @@ When `MAILJET_API_KEY` or `MAILJET_SECRET_KEY` is empty, `App.EmailSender` is `n
    SendPasswordResetEmail(ctx context.Context, toEmail, resetURL string) error
    ```
 
-2. **Add an HTML template** at `internal/infrastructure/email/templates/password_reset.html`. Use Go template syntax (`{{.FieldName}}`) for dynamic values.
+2. **Add the templates** `internal/infrastructure/email/templates/password_reset.html` and `password_reset.txt`, and a render function like `renderWelcome` that returns a `message`. Use Go template syntax (`{{.FieldName}}`) for dynamic values.
 
-3. **Implement the method** on `MailjetSender` in `internal/infrastructure/email/mailjet.go`. Follow the `SendWelcomeEmail` pattern: render the template, populate `mailjet.InfoMessagesV31`, call `client.SendMailV31`.
+3. **Implement the method** on `MailjetSender` in `internal/infrastructure/email/mailjet.go`. Follow the `SendWelcomeEmail` pattern: render the message, populate `mailjet.InfoMessagesV31` (`Subject`, `TextPart`, `HTMLPart`), call `client.SendMailV31`.
 
-4. **Update the test double** in `internal/usecase/email_usecase_test.go` to add the new method stub so `mockEmailSender` continues to satisfy the interface at compile time.
+4. **Add it to the preview**: give `previewSample` a way to render the new email (e.g. a render func per sample) and add samples to `previewSamples` in `preview.go`, so it shows at `/dev/emails`.
 
-5. **Write tests** — see the Testing section below.
+5. **Update the test double** in `internal/usecase/email_usecase_test.go` to add the new method stub so `mockEmailSender` continues to satisfy the interface at compile time.
+
+6. **Write tests** — see the Testing section below.
 
 ## Testing
 
@@ -152,6 +168,13 @@ sender := email.NewMailjetSender("bad-key", "bad-secret", "no-reply@example.com"
 err := sender.SendWelcomeEmail(context.Background(), "user@example.com", "User")
 // assert err != nil
 ```
+
+### Unit tests — rendering and preview (`internal/infrastructure/email/`)
+
+- `welcome_internal_test.go`: `renderWelcome` — subject, both parts greet by name, "there" without one, names escaped in HTML.
+- `preview_test.go`: the preview lists every sample, serves each part exactly as `renderWelcome` renders it, 404s unknown samples, and keeps one build token per process.
+- `mailjet_test.go` (`SendsBothParts`): the request carries the rendered subject, `HTMLPart` and `TextPart`.
+- `internal/transport/handlers/email_preview_handler_test.go`: `/dev/emails` is served in debug mode only.
 
 ### Integration test — live Mailjet sandbox
 
