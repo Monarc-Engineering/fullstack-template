@@ -1,0 +1,8 @@
+Welcome, {{.Name}}!
+
+Thank you for joining MyApp. We're thrilled to have you on board.
+
+If you have any questions or need assistance, feel free to reach out to our support team.
+
+Welcome aboard,
+The MyApp Team

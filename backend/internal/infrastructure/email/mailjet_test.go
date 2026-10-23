@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
 
 	"backend/internal/infrastructure/email"
@@ -105,5 +106,41 @@ func TestMailjetSender_SendWelcomeEmail_Success(t *testing.T) {
 	err := sender.SendWelcomeEmail(context.Background(), "user@example.com", "User")
 	if err != nil {
 		t.Fatalf("SendWelcomeEmail: unexpected error: %v", err)
+	}
+}
+
+// TestMailjetSender_SendWelcomeEmail_SendsBothParts checks the request carries
+// the rendered subject, HTML and plain-text parts.
+func TestMailjetSender_SendWelcomeEmail_SendsBothParts(t *testing.T) {
+	var got struct {
+		Messages []struct {
+			Subject  string
+			TextPart string
+			HTMLPart string
+		}
+	}
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if err := json.NewDecoder(r.Body).Decode(&got); err != nil {
+			t.Errorf("decode request: %v", err)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{"Messages": []map[string]any{{"Status": "success"}}})
+	}))
+	defer srv.Close()
+
+	sender := email.NewMailjetSender("key", "secret", "no-reply@example.com", "Test", srv.URL+"/v3")
+	if err := sender.SendWelcomeEmail(context.Background(), "user@example.com", "Ada"); err != nil {
+		t.Fatalf("SendWelcomeEmail: %v", err)
+	}
+
+	if len(got.Messages) != 1 {
+		t.Fatalf("expected 1 message, got %d", len(got.Messages))
+	}
+	m := got.Messages[0]
+	if m.Subject != "Welcome to MyApp!" {
+		t.Errorf("Subject = %q", m.Subject)
+	}
+	if !strings.Contains(m.HTMLPart, "Welcome, Ada!") || !strings.Contains(m.TextPart, "Welcome, Ada!") {
+		t.Errorf("expected both parts to greet Ada; HTML %q, text %q", m.HTMLPart, m.TextPart)
 	}
 }
