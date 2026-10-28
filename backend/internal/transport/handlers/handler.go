@@ -21,6 +21,8 @@ type Handler struct {
 	geoLocator     usecase.GeoLocator         // nil when geo client is not configured
 	streamProducer usecase.StreamProducer     // nil when REDIS_URL is not set
 	userRepo       usecase.UserRepository     // nil when not wired
+	// emailPreview serves /dev/emails, debug mode only; nil disables it.
+	emailPreview http.Handler
 }
 
 // NewHandler constructs a Handler with all required use cases.
@@ -52,4 +54,11 @@ func NewHandler(
 		streamProducer: streamProducer,
 		userRepo:       userRepo,
 	}
+}
+
+// WithEmailPreview enables /dev/emails, the email template preview, in debug
+// mode only.
+func (h *Handler) WithEmailPreview(preview http.Handler) *Handler {
+	h.emailPreview = preview
+	return h
 }

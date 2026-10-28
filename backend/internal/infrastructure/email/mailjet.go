@@ -1,17 +1,11 @@
 package email
 
 import (
-	"bytes"
 	"context"
-	"embed"
 	"fmt"
-	"html/template"
 
 	mailjet "github.com/mailjet/mailjet-apiv3-go/v4"
 )
-
-//go:embed templates/welcome.html
-var templateFS embed.FS
 
 // MailjetSender implements usecase.EmailSender using the Mailjet
 // transactional email API (Send API v3.1).
@@ -45,12 +39,12 @@ func NewSandboxSender(apiKey, secretKey, fromEmail, fromName string) *MailjetSen
 	}
 }
 
-// SendWelcomeEmail sends a welcome email to toEmail rendered from the
-// embedded welcome.html template.
+// SendWelcomeEmail sends the welcome email (templates/welcome.html and
+// welcome.txt, rendered by renderWelcome) to toEmail.
 func (s *MailjetSender) SendWelcomeEmail(_ context.Context, toEmail, toName string) error {
-	html, err := renderWelcomeTemplate(toName)
+	msg, err := renderWelcome(toName)
 	if err != nil {
-		return fmt.Errorf("email: render welcome template: %w", err)
+		return fmt.Errorf("email: render welcome: %w", err)
 	}
 
 	messagesInfo := []mailjet.InfoMessagesV31{
@@ -65,8 +59,9 @@ func (s *MailjetSender) SendWelcomeEmail(_ context.Context, toEmail, toName stri
 					Name:  toName,
 				},
 			},
-			Subject:  "Welcome to MyApp!",
-			HTMLPart: html,
+			Subject:  msg.Subject,
+			TextPart: msg.Text,
+			HTMLPart: msg.HTML,
 		},
 	}
 
@@ -79,24 +74,4 @@ func (s *MailjetSender) SendWelcomeEmail(_ context.Context, toEmail, toName stri
 		return fmt.Errorf("email: mailjet send: %w", err)
 	}
 	return nil
-}
-
-// renderWelcomeTemplate executes the embedded welcome.html template with the
-// recipient name and returns the rendered HTML string.
-func renderWelcomeTemplate(name string) (string, error) {
-	raw, err := templateFS.ReadFile("templates/welcome.html")
-	if err != nil {
-		return "", fmt.Errorf("read welcome template: %w", err)
-	}
-
-	tmpl, err := template.New("welcome").Parse(string(raw))
-	if err != nil {
-		return "", fmt.Errorf("parse welcome template: %w", err)
-	}
-
-	var buf bytes.Buffer
-	if err := tmpl.Execute(&buf, map[string]string{"Name": name}); err != nil {
-		return "", fmt.Errorf("execute welcome template: %w", err)
-	}
-	return buf.String(), nil
 }

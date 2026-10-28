@@ -14,6 +14,7 @@ import (
 
 	"backend/internal/bootstrap"
 	"backend/internal/infrastructure/database/postgres"
+	"backend/internal/infrastructure/email"
 	"backend/internal/infrastructure/ws"
 	"backend/internal/transport/handlers"
 	"backend/internal/usecase"
@@ -58,7 +59,8 @@ func NewServer(app *bootstrap.App, hub *ws.Hub) (*http.Server, error) {
 		}
 	}
 
-	h := handlers.NewHandler(healthUC, app.Firebase, hub, app.Enqueuer, queueUI, app.FCMSender, fcmTokenRepo, app.EmailSender, app.StorageService, app.GeoLocator, app.StreamProducer, userRepo)
+	h := handlers.NewHandler(healthUC, app.Firebase, hub, app.Enqueuer, queueUI, app.FCMSender, fcmTokenRepo, app.EmailSender, app.StorageService, app.GeoLocator, app.StreamProducer, userRepo).
+		WithEmailPreview(email.NewPreview("/dev/emails"))
 
 	// Register DB pool metrics collector.
 	// AlreadyRegisteredError is silenced — only the first registration wins

@@ -74,6 +74,12 @@ func (h *Handler) RegisterRoutes(rps float64, burst int, sentryDSN string, allow
 		r.Any("/admin/queues/*path", gin.WrapH(h.queueUI))
 	}
 
+	// Email template preview — debug/local only (backend/docs/email.md).
+	if gin.Mode() == gin.DebugMode && h.emailPreview != nil {
+		r.GET("/dev/emails", gin.WrapH(h.emailPreview))
+		r.GET("/dev/emails/*path", gin.WrapH(h.emailPreview))
+	}
+
 	api := r.Group("/api/v1")
 	if h.verifier != nil {
 		api.Use(middleware.FirebaseAuth(h.verifier))

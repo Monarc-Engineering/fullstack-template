@@ -379,6 +379,37 @@ paths:
       summary: Request a presigned upload URL
       tags:
       - storage
+  /dev/emails:
+    get:
+      description: Each email rendered with sample data, as Mailjet would get it.
+        Local development only.
+      parameters:
+      - description: Sample to show
+        in: query
+        name: email
+        type: string
+      - description: text for the plain-text part
+        in: query
+        name: view
+        type: string
+      - description: phone for a 375px-wide frame
+        in: query
+        name: width
+        type: string
+      produces:
+      - text/html
+      responses:
+        "200":
+          description: Preview page
+          schema:
+            type: string
+        "404":
+          description: Unknown sample
+          schema:
+            type: string
+      summary: Email template preview
+      tags:
+      - observability
   /health:
     get:
       produces:
