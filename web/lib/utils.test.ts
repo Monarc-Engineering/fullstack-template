@@ -1,3 +1,4 @@
+import { it, expect } from 'vitest'
 import { cn } from '@/lib/utils'
 
 it('returns a single class unchanged', () => {

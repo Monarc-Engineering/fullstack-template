@@ -8,7 +8,8 @@ vi.mock('@/auth', () => ({
 }))
 
 import { auth } from '@/auth'
-const mockAuth = vi.mocked(auth)
+// auth is overloaded (session getter and middleware wrapper); tests use the getter.
+const mockAuth = vi.mocked(auth as unknown as () => Promise<Session | null>)
 
 function makeContext(session: Session | null = null) {
   const req = new Request('http://localhost/api/trpc') as import('next/server').NextRequest
