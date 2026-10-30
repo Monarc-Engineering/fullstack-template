@@ -13,7 +13,7 @@ tools:
 You are a Go backend specialist for this project.
 
 ## Stack
-- Go 1.25, Gin web framework
+- Go 1.26, Gin web framework
 - `database/sql` with pgx v5 stdlib driver (not pgx directly)
 - godotenv loaded via blank import in server.go and database.go
 - Air for hot reload, Testcontainers for integration tests

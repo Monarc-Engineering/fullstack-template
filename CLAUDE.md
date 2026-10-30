@@ -4,7 +4,7 @@
 | Layer | Tech |
 |---|---|
 | Frontend | Next.js 16, React 19, TypeScript 5, Tailwind CSS 4 |
-| Backend | Go 1.25, Gin, `database/sql` + pgx v5 stdlib |
+| Backend | Go 1.26, Gin, `database/sql` + pgx v5 stdlib |
 | Database | PostgreSQL 16 via Docker Compose |
 | Mobile | Android, Kotlin 2.2, Jetpack Compose BOM 2026.02, Material3 |
 | Dev tools | pnpm, Air (Go hot reload), Testcontainers, Gradle 9.4 |

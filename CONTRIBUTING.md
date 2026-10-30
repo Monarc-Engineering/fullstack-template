@@ -92,7 +92,7 @@ Feature suggestions are welcome. Open an issue with:
 
 | Tool | Minimum version | Check |
 |---|---|---|
-| Go | 1.25 | `go version` |
+| Go | 1.26 | `go version` |
 | Node.js | 22 | `node --version` |
 | pnpm | any | `pnpm --version` |
 | Docker Desktop | running | `docker info` |
