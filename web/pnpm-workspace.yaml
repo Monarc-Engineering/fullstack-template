@@ -4,3 +4,8 @@ allowBuilds:
   protobufjs: false
   sharp: false
   unrs-resolver: false
+
+# Firestore pins @grpc/grpc-js ~1.9, which has known vulnerabilities (Dependabot).
+# Drop this once firebase ships a fixed version.
+overrides:
+  "@firebase/firestore>@grpc/grpc-js": ^1.13.7
