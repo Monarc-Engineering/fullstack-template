@@ -27,7 +27,7 @@ Operational guide for deploying and maintaining the fullstack template in stagin
 | Tool | Purpose | Min version |
 |---|---|---|
 | Docker | Local Postgres + Prometheus/Grafana | 24 |
-| Go | Build the backend binary | 1.25 |
+| Go | Build the backend binary | 1.26 |
 | Node.js | Build the web app | 22 |
 | pnpm | Web package manager | any |
 | `gh` CLI | GitHub operations | 2 |
@@ -225,7 +225,7 @@ The backend compiles to a single binary. Choose one deployment model:
 ### Option A — Docker (recommended)
 
 ```dockerfile
-FROM golang:1.25-alpine AS build
+FROM golang:1.26-alpine AS build
 WORKDIR /app
 COPY . .
 RUN go build -o /server ./cmd/api

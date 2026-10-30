@@ -39,7 +39,7 @@ A production-ready fullstack starter. Clone it, rename things, and focus on your
 | Layer | Technology |
 |---|---|
 | Web | Next.js 16, React 19, TypeScript 5, Tailwind CSS 4 |
-| Backend | Go 1.25, Gin v1.12 |
+| Backend | Go 1.26, Gin v1.12 |
 | Database | PostgreSQL 16 (via Docker), goose migrations, pgx v5 |
 | Auth | Firebase Authentication (web + Android) |
 | Background jobs | Redis, Asynq (opt-in) |
@@ -54,7 +54,7 @@ A production-ready fullstack starter. Clone it, rename things, and focus on your
 
 | Tool | Min version | Notes |
 |---|---|---|
-| [Go](https://go.dev/dl/) | 1.25 | |
+| [Go](https://go.dev/dl/) | 1.26 | |
 | [Node.js](https://nodejs.org/) | 22 | |
 | [pnpm](https://pnpm.io/installation) | any | `npm i -g pnpm` |
 | [Docker Desktop](https://www.docker.com/) | 24 | Required for Postgres and integration tests |
